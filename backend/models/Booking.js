@@ -2,27 +2,39 @@ const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema(
   {
-    user: {
+    customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'User is required'],
+      ref: 'Customer',
+      required: [true, 'Customer is required'],
     },
-    car: {
+    vehicleId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Car',
-      required: [true, 'Car is required'],
+      ref: 'Vehicle',
+      required: [true, 'Vehicle is required'],
     },
-    startDate: {
+    pickupDate: {
       type: Date,
-      required: [true, 'Start date is required'],
+      required: [true, 'Pickup date is required'],
     },
-    endDate: {
+    returnDate: {
       type: Date,
-      required: [true, 'End date is required'],
+      required: [true, 'Return date is required'],
+      // Custom validator: returnDate must be strictly after pickupDate
+      validate: {
+        validator: function (value) {
+          // 'this' refers to the document being validated
+          return value > this.pickupDate;
+        },
+        message: 'Return date must be after pickup date',
+      },
     },
-    totalPrice: {
-      type: Number,
-      required: [true, 'Total price is required'],
+    status: {
+      type: String,
+      enum: {
+        values: ['reserved', 'ongoing', 'completed', 'cancelled'],
+        message: 'Status must be reserved, ongoing, completed, or cancelled',
+      },
+      default: 'reserved',
     },
   },
   { timestamps: true }

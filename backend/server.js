@@ -16,14 +16,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/cars', require('./routes/carRoutes'));
-app.use('/api/bookings', require('./routes/bookingRoutes'));
+// API v1 routes
+app.use('/api/v1/auth', require('./routes/authRoutes'));
+app.use('/api/v1/vehicles', require('./routes/vehicleRoutes'));
+app.use('/api/v1/bookings', require('./routes/bookingRoutes'));
 
-// Start server after DB connects
 const PORT = process.env.PORT || 5000;
 
+// Connect to MongoDB then start listening
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
