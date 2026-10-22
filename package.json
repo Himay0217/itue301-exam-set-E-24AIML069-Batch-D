@@ -1,0 +1,9 @@
+{
+  "name": "drive-easy-car-rental",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
