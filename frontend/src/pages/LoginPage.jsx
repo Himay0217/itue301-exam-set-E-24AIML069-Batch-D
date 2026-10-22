@@ -1,17 +1,61 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
 /**
  * LoginPage
  *
- * Renders an email + password login form.
- * No submission logic yet — wired up in a later task.
+ * POSTs { email, password } to POST /api/v1/auth/login.
+ * On success stores the customer + token via AuthContext and navigates to /fleet.
+ * On failure shows an inline error message.
  */
 const LoginPage = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || 'Login failed. Please check your credentials.');
+        return;
+      }
+
+      // data.user holds the customer profile; data.token is the JWT
+      login(data.user, data.token);
+      navigate('/fleet');
+    } catch {
+      setError('Network error — please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h2 style={styles.heading}>Sign In</h2>
         <p style={styles.sub}>Welcome back to DriveEasy</p>
 
-        <form style={styles.form}>
+        {error && <p style={styles.error}>{error}</p>}
+
+        <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label} htmlFor="email">
             Email
           </label>
@@ -19,8 +63,11 @@ const LoginPage = () => {
             id="email"
             type="email"
             placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             style={styles.input}
             autoComplete="email"
+            required
           />
 
           <label style={styles.label} htmlFor="password">
@@ -30,12 +77,15 @@ const LoginPage = () => {
             id="password"
             type="password"
             placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             style={styles.input}
             autoComplete="current-password"
+            required
           />
 
-          <button type="submit" style={styles.btn}>
-            Login
+          <button type="submit" style={styles.btn} disabled={loading}>
+            {loading ? 'Signing in…' : 'Login'}
           </button>
         </form>
 
@@ -70,9 +120,18 @@ const styles = {
     fontSize: '1.5rem',
   },
   sub: {
-    margin: '0 0 24px',
+    margin: '0 0 16px',
     color: '#666',
     fontSize: '0.9rem',
+  },
+  error: {
+    margin: '0 0 12px',
+    padding: '10px 12px',
+    backgroundColor: '#fef2f2',
+    color: '#dc2626',
+    border: '1px solid #fecaca',
+    borderRadius: '4px',
+    fontSize: '0.875rem',
   },
   form: {
     display: 'flex',
@@ -100,6 +159,7 @@ const styles = {
     borderRadius: '4px',
     fontSize: '1rem',
     cursor: 'pointer',
+    opacity: 1,
   },
   footer: {
     marginTop: '20px',

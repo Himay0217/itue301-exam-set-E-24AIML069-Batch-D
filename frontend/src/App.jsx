@@ -1,35 +1,54 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import FleetPage from './pages/FleetPage';
+import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import FleetPage from './pages/FleetPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 
-/**
- * PrivateRoute
- *
- * Redirects unauthenticated users to /login.
- * Token presence in AuthContext is the auth signal.
- */
-const PrivateRoute = ({ children }) => {
-  const { token } = useAuth();
-  return token ? children : <Navigate to="/login" replace />;
-};
+// Lazy-load AdminPanel so it is only fetched when the /admin route is visited
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 
 const App = () => {
   return (
     <BrowserRouter>
+      {/* Navbar sits outside Routes so it renders on every page */}
+      <Navbar />
+
       <Routes>
-        <Route path="/" element={<FleetPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        {/* "/" → LoginPage (public) */}
+        <Route path="/" element={<LoginPage />} />
+
+        {/* "/fleet" → FleetPage (protected) */}
         <Route
-          path="/bookings"
+          path="/fleet"
           element={
-            <PrivateRoute>
+            <ProtectedRoute>
+              <FleetPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "/my-bookings" → MyBookingsPage (protected) */}
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute>
               <MyBookingsPage />
-            </PrivateRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "/admin" → AdminPanel (lazy, protected) */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback="Loading admin panel...">
+                <AdminPanel />
+              </Suspense>
+            </ProtectedRoute>
           }
         />
       </Routes>

@@ -2,56 +2,65 @@ import { createContext, useState, useEffect, useContext } from 'react';
 
 export const AuthContext = createContext(null);
 
+/**
+ * AuthProvider
+ *
+ * Holds { customer, token } in state.
+ * Persists to localStorage so a page refresh keeps the user logged in.
+ * Restores session on mount, clearing it when the token is expired or malformed.
+ */
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [customer, setCustomer] = useState(null);
   const [token, setToken] = useState(null);
 
-  // On mount: restore session from localStorage if token is still valid
+  // Restore session from localStorage on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('driveEasyToken');
+    const storedCustomer = localStorage.getItem('driveEasyCustomer');
 
-    if (storedToken && storedUser) {
+    if (storedToken && storedCustomer) {
       try {
-        // Decode the JWT payload (base64) to check expiry — no library needed
+        // Decode JWT payload (base64url) to check expiry — no library required
         const payload = JSON.parse(atob(storedToken.split('.')[1]));
         const isExpired = payload.exp * 1000 < Date.now();
 
         if (isExpired) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          localStorage.removeItem('driveEasyToken');
+          localStorage.removeItem('driveEasyCustomer');
         } else {
           setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+          setCustomer(JSON.parse(storedCustomer));
         }
       } catch {
-        // Token is malformed — clear it
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        // Token is malformed — wipe it
+        localStorage.removeItem('driveEasyToken');
+        localStorage.removeItem('driveEasyCustomer');
       }
     }
   }, []);
 
-  const login = (userData, jwt) => {
-    setUser(userData);
+  /** Call after a successful login API response */
+  const login = (customerData, jwt) => {
+    setCustomer(customerData);
     setToken(jwt);
-    localStorage.setItem('token', jwt);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('driveEasyToken', jwt);
+    localStorage.setItem('driveEasyCustomer', JSON.stringify(customerData));
   };
 
+  /** Call when the user clicks Logout */
   const logout = () => {
-    setUser(null);
+    setCustomer(null);
     setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('driveEasyToken');
+    localStorage.removeItem('driveEasyCustomer');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ customer, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Convenience hook
+/** Convenience hook — use inside any component wrapped by AuthProvider */
 export const useAuth = () => useContext(AuthContext);

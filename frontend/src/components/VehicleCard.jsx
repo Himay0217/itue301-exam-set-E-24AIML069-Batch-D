@@ -2,15 +2,17 @@
  * VehicleCard
  *
  * Props:
- *   model      {string}  - Vehicle model name
- *   type       {string}  - Vehicle type (e.g. Sedan, SUV)
- *   pricePerDay {number} - Daily rental price in USD
- *   available  {boolean} - Whether the car can be booked right now
+ *   model       {string}    — Vehicle model name
+ *   type        {string}    — Vehicle category (e.g. Sedan, SUV, Electric)
+ *   pricePerDay {number}    — Daily rental price in USD
+ *   available   {boolean}  — Whether the vehicle can be booked
+ *   onBookNow   {function} — Called when the "Book Now" button is clicked
  */
-const VehicleCard = ({ model, type, pricePerDay, available }) => {
+const VehicleCard = ({ model, type, pricePerDay, available, onBookNow }) => {
   return (
     <div style={styles.card}>
       <h3 style={styles.model}>{model}</h3>
+
       <p style={styles.detail}>
         <span style={styles.label}>Type:</span> {type}
       </p>
@@ -24,9 +26,11 @@ const VehicleCard = ({ model, type, pricePerDay, available }) => {
         </span>
       </p>
 
-      {/* Ternary: Book Now button when available, badge when not */}
+      {/* Ternary: "Book Now" button when available, "Not Available" badge when not */}
       {available ? (
-        <button style={styles.bookBtn}>Book Now</button>
+        <button style={styles.bookBtn} onClick={onBookNow}>
+          Book Now
+        </button>
       ) : (
         <span style={styles.badge}>Not Available</span>
       )}
@@ -58,10 +62,10 @@ const styles = {
     fontWeight: 'bold',
   },
   available: {
-    color: '#2a9d3f',
+    color: '#16a34a',
   },
   unavailable: {
-    color: '#c0392b',
+    color: '#dc2626',
   },
   bookBtn: {
     marginTop: '8px',
@@ -78,7 +82,7 @@ const styles = {
     display: 'inline-block',
     padding: '6px 12px',
     backgroundColor: '#f1f1f1',
-    color: '#c0392b',
+    color: '#dc2626',
     borderRadius: '4px',
     fontSize: '0.85rem',
     fontWeight: 'bold',
